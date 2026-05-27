@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flask 服務狀態儀表板</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Plus+Jakarta+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="background-decor">
+        <div class="glow-orb orb-1"></div>
+        <div class="glow-orb orb-2"></div>
+    </div>
+    
+    <main class="dashboard-container">
+        <header class="dashboard-header">
+            <div class="logo">
+                <span class="flask-icon"><i class="fa-solid fa-flask"></i></span>
+                <h1>Flask App <span class="gradient-text">Console</span></h1>
+            </div>
+            <div class="badge">
+                <span class="pulse-dot"></span>
+                <span>Port 19191</span>
+            </div>
+        </header>
+
+        <section class="metrics-grid">
+            <!-- Card 1: Status -->
+            <div class="card status-card">
+                <div class="card-icon"><i class="fa-solid fa-server"></i></div>
+                <div class="card-content">
+                    <h3>伺服器狀態</h3>
+                    <div class="value status-val">載入中...</div>
+                    <p class="desc">服務正常運行於 0.0.0.0:19191</p>
+                </div>
+            </div>
+
+            <!-- Card 2: Uptime -->
+            <div class="card uptime-card">
+                <div class="card-icon"><i class="fa-solid fa-clock"></i></div>
+                <div class="card-content">
+                    <h3>已運行時間</h3>
+                    <div class="value uptime-val" id="uptime-display">載入中...</div>
+                    <p class="desc">自本次服務啟動以來</p>
+                </div>
+            </div>
+
+            <!-- Card 3: Platform Info -->
+            <div class="card platform-card">
+                <div class="card-icon"><i class="fa-brands fa-python"></i></div>
+                <div class="card-content">
+                    <h3>環境資訊</h3>
+                    <div class="value env-val" id="env-display">Python --</div>
+                    <p class="desc" id="python-ver-desc">Flask 框架核心</p>
+                </div>
+            </div>
+
+            <!-- Card 4: Cinnamon Roll -->
+            <div class="card cinnamon-card">
+                <div class="card-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.2);"><i class="fa-solid fa-cookie-bite"></i></div>
+                <div class="card-content">
+                    <h3>最愛肉桂捲代碼</h3>
+                    <div class="value cinnamon-val" id="cinnamon-display" style="color: #f59e0b;">載入中...</div>
+                    <p class="desc" id="cinnamon-name-desc">讀取資料中</p>
+                </div>
+            </div>
+
+            <!-- Card 5: Afternoon Company -->
+            <div class="card company-card">
+                <div class="card-icon" style="color: #3b82f6; background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.2);"><i class="fa-solid fa-building"></i></div>
+                <div class="card-content">
+                    <h3>下午上班公司</h3>
+                    <div class="value company-val" id="company-display" style="color: #3b82f6;">載入中...</div>
+                    <p class="desc" id="company-loc-desc">讀取資料中</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Interactive Section -->
+        <section class="interactive-panel glass-panel">
+            <div class="panel-header">
+                <h2><i class="fa-solid fa-terminal"></i> API 測試工具</h2>
+                <p>點擊按鈕直接對本地端 19191 埠發送 API 請求並獲取即時回傳資料</p>
+            </div>
+            
+            <div class="actions">
+                <button id="btn-fetch-status" class="btn primary-btn">
+                    <i class="fa-solid fa-wave-square"></i> 取得狀態 (/api/status)
+                </button>
+                <button id="btn-fetch-health" class="btn secondary-btn">
+                    <i class="fa-solid fa-heartpulse"></i> 健康檢查 (/health)
+                </button>
+                <button id="btn-fetch-cinnamon" class="btn secondary-btn">
+                    <i class="fa-solid fa-cookie-bite"></i> 肉桂捲代碼 (/api/cinnamon)
+                </button>
+                <button id="btn-fetch-company" class="btn secondary-btn">
+                    <i class="fa-solid fa-building"></i> 下午上班公司 (/api/company)
+                </button>
+                <button id="btn-toggle-editor" class="btn secondary-btn" style="border-color: var(--primary-color);">
+                    <i class="fa-solid fa-pen-to-square"></i> 編輯偏好資料
+                </button>
+            </div>
+
+            <!-- Editor Form Container -->
+            <div class="editor-section" id="editor-form-container" style="display: none; margin-bottom: 25px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); padding: 20px; border-radius: 12px;">
+                <h3 style="font-size: 1.1rem; margin-bottom: 15px; font-family: var(--font-heading); color: var(--text-highlight);"><i class="fa-solid fa-sliders"></i> 更新設定資料</h3>
+                <div class="form-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                    <div class="form-group">
+                        <label>肉桂捲代碼</label>
+                        <input type="text" id="input-cinnamon-code" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>肉桂捲名稱</label>
+                        <input type="text" id="input-cinnamon-name" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>下午上班公司</label>
+                        <input type="text" id="input-company-name" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>公司地點</label>
+                        <input type="text" id="input-company-loc" class="form-control">
+                    </div>
+                </div>
+                <button id="btn-save-data" class="btn primary-btn" style="padding: 10px 20px;"><i class="fa-solid fa-save"></i> 儲存更新</button>
+            </div>
+
+            <div class="console-output">
+                <div class="console-head">
+                    <span class="dot red"></span>
+                    <span class="dot yellow"></span>
+                    <span class="dot green"></span>
+                    <span class="console-title">Response Output</span>
+                </div>
+                <pre class="console-body"><code id="response-code">// 點擊上方按鈕測試 API 端點...</code></pre>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Designed for Flask 19191 Deployment</p>
+    </footer>
+
+    <script>
+        let currentCinnamon = {};
+        let currentCompany = {};
+
+        // Fetch stats automatically on load
+        async function updateStats() {
+            try {
+                // Fetch server state
+                const res = await fetch('/api/status');
+                if (res.ok) {
+                    const data = await res.json();
+                    document.querySelector('.status-val').innerHTML = '<span class="status-online">Online</span>';
+                    document.getElementById('uptime-display').textContent = data.uptime;
+                    document.getElementById('env-display').textContent = `Python ${data.python_version}`;
+                    document.getElementById('python-ver-desc').textContent = `${data.framework} (${data.environment} 模式)`;
+                }
+            } catch (e) {
+                console.error("Failed to fetch status", e);
+                document.querySelector('.status-val').innerHTML = '<span class="status-offline">Offline</span>';
+            }
+
+            try {
+                // Fetch Cinnamon Roll data
+                const resCin = await fetch('/api/cinnamon');
+                if (resCin.ok) {
+                    currentCinnamon = await resCin.json();
+                    document.getElementById('cinnamon-display').textContent = currentCinnamon.cinnamon_roll_code;
+                    document.getElementById('cinnamon-name-desc').textContent = currentCinnamon.cinnamon_roll_name;
+                }
+            } catch (e) {
+                console.error("Failed to fetch cinnamon roll data", e);
+            }
+
+            try {
+                // Fetch Company data
+                const resComp = await fetch('/api/company');
+                if (resComp.ok) {
+                    currentCompany = await resComp.json();
+                    document.getElementById('company-display').textContent = currentCompany.afternoon_company;
+                    document.getElementById('company-loc-desc').textContent = currentCompany.afternoon_company_location;
+                }
+            } catch (e) {
+                console.error("Failed to fetch company data", e);
+            }
+        }
+
+        // Fetch data when clicking API buttons
+        async function fetchAPI(endpoint) {
+            const codeElem = document.getElementById('response-code');
+            codeElem.textContent = "// 正在發送請求...";
+            try {
+                const res = await fetch(endpoint);
+                const data = await res.json();
+                codeElem.textContent = JSON.stringify(data, null, 4);
+                updateStats();
+            } catch (e) {
+                codeElem.textContent = `// 錯誤: 無法連線至 ${endpoint}\n${e.message}`;
+            }
+        }
+
+        // Setup Form Save Handler
+        async function saveData() {
+            const codeElem = document.getElementById('response-code');
+            codeElem.textContent = "// 正在發送儲存請求...";
+
+            const cinCode = document.getElementById('input-cinnamon-code').value;
+            const cinName = document.getElementById('input-cinnamon-name').value;
+            const compName = document.getElementById('input-company-name').value;
+            const compLoc = document.getElementById('input-company-loc').value;
+
+            try {
+                // Save Cinnamon Roll data
+                const resCin = await fetch('/api/cinnamon', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        cinnamon_roll_code: cinCode,
+                        cinnamon_roll_name: cinName
+                    })
+                });
+
+                // Save Company data
+                const resComp = await fetch('/api/company', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        afternoon_company: compName,
+                        afternoon_company_location: compLoc
+                    })
+                });
+
+                if (resCin.ok && resComp.ok) {
+                    const dataCin = await resCin.json();
+                    const dataComp = await resComp.json();
+                    codeElem.textContent = `// 偏好資料已儲存成功！\n\nCinnamon Roll API response:\n${JSON.stringify(dataCin, null, 2)}\n\nCompany API response:\n${JSON.stringify(dataComp, null, 2)}`;
+                    updateStats();
+                } else {
+                    codeElem.textContent = "// 儲存過程中發生錯誤！";
+                }
+            } catch (e) {
+                codeElem.textContent = `// 錯誤: 儲存失敗\n${e.message}`;
+            }
+        }
+
+        document.getElementById('btn-fetch-status').addEventListener('click', () => fetchAPI('/api/status'));
+        document.getElementById('btn-fetch-health').addEventListener('click', () => fetchAPI('/health'));
+        document.getElementById('btn-fetch-cinnamon').addEventListener('click', () => fetchAPI('/api/cinnamon'));
+        document.getElementById('btn-fetch-company').addEventListener('click', () => fetchAPI('/api/company'));
+
+        // Toggle editor form
+        const editorContainer = document.getElementById('editor-form-container');
+        document.getElementById('btn-toggle-editor').addEventListener('click', () => {
+            if (editorContainer.style.display === 'none') {
+                // Populate current data
+                document.getElementById('input-cinnamon-code').value = currentCinnamon.cinnamon_roll_code || "";
+                document.getElementById('input-cinnamon-name').value = currentCinnamon.cinnamon_roll_name || "";
+                document.getElementById('input-company-name').value = currentCompany.afternoon_company || "";
+                document.getElementById('input-company-loc').value = currentCompany.afternoon_company_location || "";
+                editorContainer.style.display = 'block';
+            } else {
+                editorContainer.style.display = 'none';
+            }
+        });
+
+        // Save button
+        document.getElementById('btn-save-data').addEventListener('click', saveData);
+
+        // Initial fetch
+        updateStats();
+        // Periodically refresh stats
+        setInterval(updateStats, 5000);
+    </script>
+
+</body>
+</html>
